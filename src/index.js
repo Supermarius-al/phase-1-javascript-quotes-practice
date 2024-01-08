@@ -2,49 +2,78 @@ let quoteList = document.getElementById('quote-list')
 let submitBtn = document.getElementById("new-quote-form")
 
 document.addEventListener('DOMContentLoaded', () => {fetchQuotes()})
+
+
 async function fetchQuotes(){
-    fetch(`http://localhost:3000/quotes`)
+    fetch(`http://localhost:3000/quotes?_embed=likes`)
     .then(resp => resp.json())
-    .then(quotesArr => quotesArr.forEach(renderQuotes))
+    .then(quotesArr => {quotesArr.forEach(renderQuotes)})
+   
 }
 
 /// Submit portion
 
 async function renderQuotes(quoteObj){
    let quoteItem = document.createElement('li')
-  // let footer = document.getElementsByClassName('blockquote-footer')
-  // let likeBtn = document.createElement('button')
-  //let quoteP = document.createElement('p')
-//// Advisor notes create elements individually
+quoteItem.id = `${quoteObj.id}-card`
+
 quoteItem.innerHTML = 
-    `<li class='quote-card'>
+    `
     <blockquote class="blockquote">
       ${quoteObj.quote}
       <footer class="blockquote-footer">${quoteObj.author}</footer>
       <br>
-      <button class='btn-success'>Likes: <span>0</span></button>
-      <button class='btn-danger'>Delete</button>
+      <button class='btn-success' id='like'>Likes: <span class='like-count'>0</span></button>
+      <button class='btn-danger' id='delete'>Delete</button>
     </blockquote>
-  </li>`
-
+  `
+  let likes = 0
+  quoteItem.querySelector('#like').addEventListener('click', (e) => {
+    likes++
+    quoteItem.querySelector('span').textContent = likes
+  })
+  quoteItem.querySelector('#delete').addEventListener('click', (e) => {
+deleteQuote(quoteObj)
+quoteItem.remove()
+  })
   quoteList.append(quoteItem)
-
- // likeBtns.forEach((likeBtn) => likeBtn.addEventListener('click', (e) => console.log(e.target)))
-
-}
-
-let likeBtns = document.querySelectorAll('.btn-success')
-console.log(likeBtns)
-
-for (const like of likeBtns) {
-  like.addEventListener('click', (e) => console.log('click'))
   
+  //document.querySelectorAll('h2').forEach(title => title.addEventListener('click', (e) => console.log(e.target)))
+
+
+}
+
+function likeTracker(quoteObj){
+  fetch(`http://localhost:3000/likes`,{
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      "quoteId": quoteObj.id,
+      "id": 2,
+      "createdAt": 1558524358
+    })
+  }).then(res => res.json())
+  .then(addQuote => console.log())
 }
 
 
-  let deleteBtns = document.querySelectorAll('.btn-danger')
-  deleteBtns.forEach((deleteBtn) => deleteBtn.addEventListener('click', (e) => console.log(e.target)))
 
+
+ 
+
+async function deleteQuote(quote){
+
+   fetch(`http://localhost:3000/quotes/${quote.id}`,{
+    method: 'DELETE',
+    headers: {
+        'Content-Type':'application/json'
+    }
+  })
+    .then(res => res.json())
+    .then((data) => console.log(data))
+  }
 
 
   submitBtn.addEventListener('submit', e => {
@@ -54,6 +83,8 @@ for (const like of likeBtns) {
       author: document.getElementById('author').value
     }
     renderQuotes(newItem)
+    addQuote(newItem)
+    submitBtn.reset()
   })
 
   function addQuote(newQuote){
